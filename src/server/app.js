@@ -8,6 +8,7 @@ const responseTime = require("response-time");
 const errHandler = require("errorhandler");
 const httpStatus = require("http-status");
 require("dotenv").config();
+const {api} = require('./api');
 let app = express();
 app.use(logger('dev'));
 app.use(helmet());
@@ -16,6 +17,7 @@ app.use(csurf({ cookie: true }));
 app.use(compression());
 app.use(responseTime({ digits: 4 }));
 app.set("PORT", process.env.PORT || 4500);
+api(app);
 app.use("/", (req,res) => {
     return res.status(httpStatus.OK).json({"message" : "hello World"});
 });
