@@ -1,8 +1,16 @@
 const request = require("supertest");
 const should = require("should");
-const {app} = require("../src/server/app");
-describe.only("Send Request to PING EndPoint", () => {
+const {MockDb} = require("../src/server/db/lib/mockDb");
+const {createApp} = require("../src/server/app");
+describe("Send Request to PING EndPoint", () => {
     describe("GET /api/ping", () => {
+        let app;
+        let dataAccess;
+        before(async () => {
+            dataAccess = new MockDb();
+            await dataAccess.initMockDb();
+            app = await createApp({dataAccess});
+        })
         it(`it returns { "ping" : "pong" }`, async () => {
             try {
                 let response = await request(app)
