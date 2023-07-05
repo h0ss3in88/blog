@@ -8,19 +8,36 @@ const responseTime = require("response-time");
 const errHandler = require("errorhandler");
 const httpStatus = require("http-status");
 const {setUpApi} = require("./api");
-require("dotenv").config();
-let app = express();
-app.use(logger('dev'));
-app.use(helmet());
-app.use(cookieParser());
-app.use(csurf({ cookie: true }));
-app.use(compression());
-app.use(responseTime({ digits: 4 }));
-app.set("PORT", process.env.PORT || 4500);
-setUpApi({app});
-app.use("/", (req,res) => {
-    return res.status(httpStatus.OK).json({"message" : "hello World"});
-});
-app.use(errHandler());
 
-module.exports = Object.assign({},{app});
+const createApp = ({dataAccess}) => {
+    return new Promise((resolve, reject) => {
+        try {
+            require("dotenv").config();
+            let app = express();
+            app.use(logger('dev'));
+            app.use(helmet());
+            app.use(cookieParser());
+            app.use(csurf({ cookie: true }));
+            app.use(compression());
+            app.use(responseTime({ digits: 4 }));
+            app.set("PORT", process.env.PORT || 4500);
+            app.use((req,res,next) => {
+                let db = {
+                    "posts" : dataAccess
+                }
+                req.db = db;
+                return next();
+            });
+            setUpApi({app});
+            app.get("/", (req,res) => {
+            return res.status(httpStatus.OK).json({"message" : "hello World"});
+            });
+            app.use(errHandler());
+            return resolve(app);
+    
+        } catch (error) {
+          return reject(error);
+        }      
+    });
+}
+module.exports = Object.assign({},{createApp});
