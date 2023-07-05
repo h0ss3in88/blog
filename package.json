@@ -4,7 +4,7 @@
   "description": "simple blog system (nodejs-express-graphql).",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./specs/**.js"
+    "test": "env-cmd -e test mocha ./specs/**.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,7 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@types/bcryptjs": "^2.4.2",
     "@types/compression": "^1.7.2",
     "@types/cookie-parser": "^1.4.3",
@@ -61,6 +62,7 @@
     "@types/supertest": "^2.0.12",
     "@types/uuid": "^8.3.4",
     "@types/validator": "^13.7.2",
+    "env-cmd": "^10.1.0",
     "faker": "^5.5.3",
     "mocha": "^10.0.0",
     "should": "^13.2.3",
