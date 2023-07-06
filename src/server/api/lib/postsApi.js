@@ -31,33 +31,52 @@ postsApi
             return next(error);   
         }
     })
-    .post((req,res,next) => {
+    .post(async (req,res,next) => {
         try {
             // check all of inputs here 
             // create new Post
             // save new post
+            let {post} = req.body;
+            let result = await req.db.posts.createPost({item: post});
+            return res.status(httpStatus.CREATED).json({post : result});
 
         } catch (error) {
             return next(error);   
         }
     })
-    .put((req,res,next) => {
+    .put(async (req,res,next) => {
         try {
             // check all of inputs here 
+            let {updatedPost} = req.body; 
+            let id = req.id;
             // check post exits 
-            // update and save post 
-            
+            let foundPost = await req.db.posts.findOne({id : id });
+            if(foundPost !== undefined && foundPost !== null) {
+                // update and save post 
+                let post = await req.db.posts.updatePost({item : updatedPost, id});
+                return res.status(httpStatus.OK).json({post});
+            }else {
+                return res.status(httpStatus.NOT_FOUND).json("not found!");
+            }            
         } catch (error) {
+            console.log(error);
             return next(error);   
         }
     })
-    .delete((req,res,next) => {
+    .delete(async (req,res,next) => {
         try {
             // check all of inputs here 
             // check post exits 
-            // delete requested post
-            
+            let foundPost = await req.db.posts.findOne({id : req.id });
+            if(foundPost !== undefined && foundPost !== null) {
+                // delete requested post
+                let result = await req.db.posts.deletePost({id: req.id});
+                return res.status(httpStatus.OK).json({post : result});
+            }else {
+                return res.status(httpStatus.NOT_FOUND).json("not found!");
+            }
         } catch (error) {
+            console.log(error);
             return next(error);   
         }
     });

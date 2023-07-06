@@ -15,15 +15,17 @@ const createApp = ({dataAccess}) => {
             require("dotenv").config();
             let app = express();
             app.use(logger('dev'));
-            app.use(helmet());
+            app.use(express.json());
             app.use(cookieParser());
-            app.use(csurf({ cookie: true }));
+            // app.use(csurf({ cookie: true }));
+            app.use(helmet());
             app.use(compression());
             app.use(responseTime({ digits: 4 }));
             app.set("PORT", process.env.PORT || 4500);
             app.use((req,res,next) => {
                 let db = {
-                    "posts" : dataAccess
+                    "posts" : dataAccess,
+                    "users" : dataAccess
                 }
                 req.db = db;
                 return next();
@@ -36,6 +38,7 @@ const createApp = ({dataAccess}) => {
             return resolve(app);
     
         } catch (error) {
+            console.log(error);
           return reject(error);
         }      
     });
