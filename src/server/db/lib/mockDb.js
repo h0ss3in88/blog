@@ -1,4 +1,6 @@
 const {faker} = require("@faker-js/faker");
+const bcrypt = require("bcryptjs");
+
 class MockDb {
     constructor() {
         this._posts = [];
@@ -25,6 +27,9 @@ class MockDb {
     generateUser() {
         const _firstName = faker.person.firstName();
         const _lastName = faker.person.lastName();
+        const password = `${_firstName}@${_lastName}123456`;
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync(password, salt);
         return {
           _id : faker.database.mongodbObjectId(),
           profile : {
@@ -33,7 +38,8 @@ class MockDb {
             birthDate : faker.date.birthdate({ min : 19 , max : 55 , mode: "age"})
           },
           email : faker.internet.email({ firstName: _firstName, lastName: _lastName }),
-          password : `${_firstName}@${_lastName}123456`,
+          hashedPassword : hashedPassword,
+          loginCount : 0,
           isActive : faker.datatype.boolean(),
           lastLoginAt: faker.date.between({ from : '2023-07-06', to : '2023-07-08' }),
           created_at : faker.date.between({ from : '2023-06-03', to : '2023-07-01' }),
@@ -62,6 +68,50 @@ class MockDb {
     }
     findAllUsers() {
         return this.users;
+    }
+    createNewUser(item) {
+        return new Promise((resolve, reject) => {
+            try {
+                let user = {
+                    _id : faker.database.mongodbObjectId(),
+                    email: item.email,
+                    hashedPassword: item.hashedPassword,
+                    profile : item.profile,
+                    isActive : item.isActive,
+                    loginCount : item.loginCount,
+                    lastLoginAt: item.lastLoginAt,
+                    created_at : item.created_at,
+                    updated_at : item.updated_at
+                };
+                this.users.push(user);
+                return resolve(user);
+            } catch (error) {
+                console.log(error);
+                return reject(error);
+            }
+        });
+    }
+    updateUser({user}) {
+        return new Promise((resolve,reject) => {
+            try {
+                let updated = false;
+                let _user = null;
+                for (let u of this.users) {
+                    if(u._id == user._id) {
+                        u.email = user.email;
+                        u.loginCount = user.loginCount;
+                        u.lastLoginAt = user.lastLoginAt;
+                        u.updated_at = user.updated_at;
+                        updated = true;
+                        _user = u;
+                        break;
+                    }
+                }
+                return updated ? resolve(_user) : reject(new Error("unable to update user"));
+            } catch (error) {
+                return reject(error);
+            }
+        });
     }
     inActiveUserById({id}) {
         return new Promise((resolve,reject) => {
@@ -96,6 +146,22 @@ class MockDb {
             } catch (error) {
                 return reject(error);
                 }
+        });
+    }
+    isEmailExists({email}) {
+        return new Promise((resolve, reject) => {
+            try {
+                const result = this._users.find((user) => {
+                    return user.email == email;
+                });
+                if(result !== undefined && result !== null) {
+                    return resolve(true);
+                }else {
+                    return resolve(false);
+                }
+            } catch (error) {
+                return reject(new Error(error.message));
+            }
         });
     }
     findUserByEmail({email}) {
