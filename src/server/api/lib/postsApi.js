@@ -1,5 +1,6 @@
 const httpStatus = require("http-status");
 const validator = require("validator");
+const {newPostCheck, updatedPostCheck} = require("../../helpers");
 const {Router} = require("express");
 let postsApi = Router();
 
@@ -31,7 +32,7 @@ postsApi
             return next(error);   
         }
     })
-    .post(async (req,res,next) => {
+    .post([newPostCheck], async (req,res,next) => {
         try {
             // check all of inputs here 
             // create new Post
@@ -39,12 +40,11 @@ postsApi
             let {post} = req.body;
             let result = await req.db.posts.createPost({item: post});
             return res.status(httpStatus.CREATED).json({post : result});
-
         } catch (error) {
             return next(error);   
         }
     })
-    .put(async (req,res,next) => {
+    .put([updatedPostCheck], async (req,res,next) => {
         try {
             // check all of inputs here 
             let {updatedPost} = req.body; 
