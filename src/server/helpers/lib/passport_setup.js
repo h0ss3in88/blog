@@ -64,10 +64,10 @@ const initPassport = ({ db, app }) => {
   );
   passport.use(
     "jwt",
-    new JWTstrategy(
+    new JWTStrategy(
       {
-        secretOrKey: "TOP_SECRET",
-        jwtFromRequest: ExtractJWT.fromUrlQueryParameter("secret_token"),
+        secretOrKey: "Top_Secret",
+        jwtFromRequest: ExtractJWT.fromBodyField("auth_token"),
       },
       async (token, done) => {
         try {

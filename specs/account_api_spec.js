@@ -10,7 +10,7 @@ describe("Send Requests to Accounts RESTFUL EndPoint", function() {
         dataAccess = new MockDb();
         await dataAccess.initMockDb();
         app = await createApp({dataAccess});
-    })
+    });
     describe("POST /api/accounts/register", () => {
         it(`it returns created new user`, async () => {
             try {

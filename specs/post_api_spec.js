@@ -2,7 +2,7 @@ const request = require("supertest");
 const should = require("should");
 const {createApp} = require("../src/server/app");
 const {MockDb} = require("../src/server/db/lib/mockDb");
-describe.only("Send Requests to POSTS RESTFUL EndPoint", function() {
+describe("Send Requests to POSTS RESTFUL EndPoint", function() {
     this.timeout(25987100);
     let dataAccess;
     let tenthPost;
