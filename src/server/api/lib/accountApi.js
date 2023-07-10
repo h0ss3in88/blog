@@ -1,34 +1,48 @@
 const httpStatus = require("http-status");
 const {Router} = require("express");
-const {Authentication} = require("../../services");
+const {loginCheck, registrationCheck} = require("../../helpers");
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
+
 let accountApi = Router();
 
-accountApi.post("/accounts/login", async (req,res,next) => {
-    try {
-        let {email, password} = req.body;
-        let auth = new Authentication({ db: req.db });
-        let result = await auth.login({email, password});
-        if(result.success) {
-            return res.status(httpStatus.OK).json({result});
-        }else {
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({result});
+accountApi.post("/accounts/login", loginCheck, async (req,res,next) => {
+    passport.authenticate("signIn", async (err,user,info) => {
+        try {    
+            if(err || !user) {
+                let error = new Error(err);
+                return next(error);
+            }
+            req.login(user,{session: false }, async (error) => {
+                if(error) return next(error);
+                const body = { _id : user.userId , email : user.email };
+                const token = jwt.sign({user: body }, "Top_Secret");
+                return res.status(httpStatus.OK).json({id: user.userId, token, "message": info.message });
+            });
+        } catch (error) {
+            return next(error);
         }
-    } catch (error) {
-        return next(error);
-    }
+    })(req,res,next);
 });
-accountApi.post("/accounts/register", async(req,res,next) => {
-    try {
-        let {email, password, confirmation} = req.body;
-        let auth = new Authentication({ db: req.db });
-        let result = await auth.register({email, password,passwordConfirmation: confirmation});
-        if(result.success) {
-            return res.status(httpStatus.CREATED).json({result});
-        }else {
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({result});
+accountApi.post("/accounts/register", registrationCheck, async(req,res,next) => {
+    passport.authenticate("signUp", async (err,user,info) => {
+        try {    
+            if(err || !user) {
+                let error = new Error(err);
+                return next(error);
+            }
+            req.login(user,{session: false }, async (error) => {
+                if(error) return next(error);
+
+                const body = { _id : user.userId , email : user.email };
+                const token = jwt.sign({user: body }, "Top_Secret");
+                return res.status(httpStatus.OK).json({id: user.userId, token, "message": info.message });
+            });
+        } catch (error) {
+            console.log(error);
+            return next(error);
         }
-    } catch (error) {
-        return next(error);
-    }
+    })(req,res,next);
+
 });
 module.exports = Object.assign({}, {accountApi});
