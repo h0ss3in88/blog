@@ -2,10 +2,9 @@ const request = require("supertest");
 const should = require("should");
 const {createApp} = require("../src/server/app");
 const {MockDb} = require("../src/server/db/lib/mockDb");
-describe.only("Send Requests to Accounts RESTFUL EndPoint", function() {
+describe("Send Requests to Accounts RESTFUL EndPoint", function() {
     this.timeout(150000);
     let dataAccess;
-    let user;
     let app;
     before(async function () {
         dataAccess = new MockDb();
@@ -22,12 +21,11 @@ describe.only("Send Requests to Accounts RESTFUL EndPoint", function() {
                     .post("/api/accounts/register")
                     .send({email, password, confirmation})
                     .set('Accept', 'application/json');
-                should(response.status).eql(201);
+                should(response.status).eql(200);
                 should(response.headers['content-type']).match(/json/);
-                should(response.body).has.property("result");
-                should(response.body.result).has.property("userId");
-                should(response.body.result).has.property("message", "user created successfully");
-                should(response.body.result).has.property("success", true);
+                should(response.body).has.property("id");
+                should(response.body).has.property("token");
+                should(response.body).has.property("message", "user created successfully");
             }catch(err) {
                 should(err).be.Null().and.Undefined();
             }
@@ -44,9 +42,9 @@ describe.only("Send Requests to Accounts RESTFUL EndPoint", function() {
                     .set('Accept', 'application/json');
                 should(response.status).eql(200);
                 should(response.headers['content-type']).match(/json/);
-                should(response.body.result).has.property("userId");
-                should(response.body.result).has.property("message", "user logged in successfully");
-                should(response.body.result).has.property("success", true);
+                should(response.body).has.property("id");
+                should(response.body).has.property("token");
+                should(response.body).has.property("message", "user logged in successfully");
             } catch (error) {
                 should(error).be.Null().and.Undefined();
 
