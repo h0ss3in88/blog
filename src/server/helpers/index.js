@@ -1,3 +1,3 @@
 const {loginCheck, registrationCheck, newPostCheck, updatedPostCheck} = require("./lib/middleWares");
-
-module.exports = Object.assign({}, { loginCheck, registrationCheck, newPostCheck, updatedPostCheck });
+const {initPassport} = require("./lib/passport_setup");
+module.exports = Object.assign({}, { loginCheck, registrationCheck, newPostCheck, updatedPostCheck, initPassport });
