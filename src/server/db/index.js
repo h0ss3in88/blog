@@ -1,3 +1,3 @@
 const {MockDb} = require("./lib/mockDb");
-
-module.exports = Object.assign({}, {MockDb});
+const {Db} = require("./lib/db");
+module.exports = Object.assign({}, {Db, MockDb});
