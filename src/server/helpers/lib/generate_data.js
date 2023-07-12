@@ -1,4 +1,5 @@
 const {faker} = require('@faker-js/faker');
+const ObjectId = require("mongodb").ObjectId;
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +11,7 @@ const generateUser = function() {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
     return {
-          _id : faker.database.mongodbObjectId(),
+          _id : new ObjectId(),
           profile : {
             firstName : _firstName,
             lastName : _lastName,
@@ -27,7 +28,7 @@ const generateUser = function() {
 }
 const generatePost = function(userId) {
     return {
-        _id : faker.database.mongodbObjectId(),
+        _id : new ObjectId(),
         title : faker.lorem.slug({ min: 4, max: 6}),
         description : faker.lorem.paragraphs(2),
         body: faker.lorem.paragraphs(12),
