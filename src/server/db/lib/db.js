@@ -102,6 +102,79 @@ class Db {
             throw new Error(err.message);
         }
     }
+    
+    findOne({id}) {
+        return new Promise(async (resolve,reject) => {
+            try {
+                let post = await this.db.collection("posts").findOne({_id: id});
+                if(post !== null && post !== undefined){
+                    return resolve(post);
+                }else {
+                    return reject(new Error(`unable to find post by ${id} Id`));
+                }
+            } catch (error) {
+                return reject(error);
+            }
+        });
+    }
+    findAll() {
+        return new Promise(async (resolve,reject) => { 
+            try { 
+                let posts = await this.db.collection("posts").find({}).toArray();
+                return resolve(posts);
+            } 
+            catch (error) { 
+                return reject(error); 
+            } 
+        });
+    }
+    createPost({item}) {
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("posts").insertOne(item);
+            if(result.acknowledged === true) {
+                Object.defineProperty(item, "_id",{configurable: true, enumerable: true, value: result.insertedId, writable: true});
+                return resolve(item);
+            }else {
+                return reject(new Error("unable to save to database"));
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    updatePost({item, id}) {
+        return new Promise(async (resolve,reject) => { 
+            try { 
+                delete item._id;
+                let result = await this.db.collection("posts").findOneAndReplace({_id: id},item);
+                if(result.ok === true) {
+                    resolve(result.value);
+                }else {
+                    return reject(new Error("unable to update post!"));
+                }
+            } 
+            catch (error) { 
+                return reject(error); 
+            } 
+        });
+    }
+    deletePost({id}){
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("posts").findOneAndDelete({ _id: id});
+            if(result.ok === true) {
+                return resolve(result.value);
+            }else {
+                return reject(new Error("unable to delete from database!"));
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
 
 }
 module.exports = Object.assign({}, {Db});
