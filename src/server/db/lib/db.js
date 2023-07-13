@@ -103,6 +103,99 @@ class Db {
         }
     }
     
+    isEmailExists({email}) {
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("users").findOne({ "email" : email });
+            if(result !== undefined && result !== null){
+                return resolve(true)
+            }else {
+                return resolve(false);
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    inActiveUserById({id}) {
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("users").findOneAndUpdate({_id: id}, {"$set" : { "isActive" : false }});
+            if(result.ok) {
+                return resolve(result.value);
+            }else {
+                return reject(result.lastErrorObject);
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    findAllUsers(){
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let users = await this.db.collection("users").find({}).toArray();
+            if(users.length > 0){
+                return resolve(users);
+            }else {
+                return resolve([]);
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    findUserByEmail({email}){
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("users").findOne({ "email" : email });
+            if(result !== undefined && result !== null){
+                return resolve(result);
+            }else{
+                return reject(new Error(`unable to find user by ${email} Email Address!`));
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    createNewUser(user) {
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let result = await this.db.collection("users").insertOne(user);
+            if(result.acknowledged === true) {
+                Object.defineProperty(user, "_id",{configurable: true, enumerable: true, value: result.insertedId, writable: true});
+                return resolve(user);
+            }else {
+                return reject(new Error("unable save to database"));
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    updateUser({user}) {
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let id = user.id;
+            delete user._id;
+            let result = await this.db.collection("users").findOneAndReplace({ _id : id }, user);
+            if(result.ok){
+                return resolve(result.value);
+            }else{
+                return reject(result.lastErrorObject);
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
     findOne({id}) {
         return new Promise(async (resolve,reject) => {
             try {
