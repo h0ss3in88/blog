@@ -50,7 +50,7 @@ postsApi
             let {updatedPost} = req.body; 
             let id = req.id;
             // check post exits 
-            let foundPost = await req.db.posts.findOne({id : id });
+            let foundPost = await req.db.posts.findOne({id});
             if(foundPost !== undefined && foundPost !== null) {
                 // update and save post 
                 let post = await req.db.posts.updatePost({item : updatedPost, id});
