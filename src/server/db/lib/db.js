@@ -1,4 +1,4 @@
-const {MongoClient, ServerApiVersion} = require("mongodb");
+const {MongoClient, ServerApiVersion, ObjectId} = require("mongodb");
 const {readDataFromFiles} = require('../../helpers');
 
 class Db {
@@ -16,7 +16,22 @@ class Db {
         this.connection = null;
         this.db = null;
     }
+    async connect() {
+        try {
+            console.log(4);
+            this.connection = await this.client.connect();
+            console.log(5);
+            this.db = await this.connection.db("blog");
+            console.log(6);
+            this.collectionNames = await this.getCollectionNames();
+            console.log(7);
+            console.log("successfully connected to MongoDB!");
 
+        } catch (error) {
+            console.log(err);
+            throw new Error(err);
+        }
+    }
     async init() {
         try {
             console.log(1);
@@ -103,6 +118,8 @@ class Db {
         }
     }
     
+    //////////// *************** BEGIN USER'S CRUD FUNCTIONS **************** //////////////////
+
     isEmailExists({email}) {
         return new Promise(async (resolve,reject) => { 
          try { 
@@ -118,10 +135,26 @@ class Db {
          } 
         });
     }
+    activeUserById({id}){
+        return new Promise(async (resolve,reject) => { 
+            try { 
+               let result = await this.db.collection("users").findOneAndUpdate({_id:  id}, {"$set" : { "isActive" : true }});
+               if(result.ok) {
+                   return resolve(result.value);
+               }else {
+                   return reject(result.lastErrorObject);
+               }
+            } 
+            catch (error) { 
+               console.log(error);
+                return reject(error); 
+            } 
+           });
+    }
     inActiveUserById({id}) {
         return new Promise(async (resolve,reject) => { 
          try { 
-            let result = await this.db.collection("users").findOneAndUpdate({_id: id}, {"$set" : { "isActive" : false }});
+            let result = await this.db.collection("users").findOneAndUpdate({_id:  id}, {"$set" : { "isActive" : false }});
             if(result.ok) {
                 return resolve(result.value);
             }else {
@@ -141,6 +174,21 @@ class Db {
                 return resolve(users);
             }else {
                 return resolve([]);
+            }
+         } 
+         catch (error) { 
+             return reject(error); 
+         } 
+        });
+    }
+    findUserById({id}){
+        return new Promise(async (resolve,reject) => { 
+         try { 
+            let user = await this.db.collection("users").findOne({_id : id});
+            if(user !== null && user !== undefined){
+                return resolve(user);
+            }else {
+                return reject(new Error(`unable to find user by ${id} Id`));
             }
          } 
          catch (error) { 
@@ -182,13 +230,15 @@ class Db {
     updateUser({user}) {
         return new Promise(async (resolve,reject) => { 
          try { 
-            let id = user.id;
-            delete user._id;
-            let result = await this.db.collection("users").findOneAndReplace({ _id : id }, user);
-            if(result.ok){
+            let id = user._id;
+            let result = await this.db.collection("users").findOneAndReplace({ _id : id }, user, { returnNewDocument : true });
+            if(result.ok && result.value !== null) {
                 return resolve(result.value);
-            }else{
-                return reject(result.lastErrorObject);
+            }else if(result.ok && result.value === null){
+                return reject(new Error(`could'nt found any document by ${id}`));    
+            }
+            else{
+                return reject(new Error(`unable to update document ${id}`));
             }
          } 
          catch (error) { 
@@ -196,17 +246,37 @@ class Db {
          } 
         });
     }
-    findOne({id}) {
+    deleteUser({id}) {
         return new Promise(async (resolve,reject) => {
             try {
-                let post = await this.db.collection("posts").findOne({_id: id});
-                if(post !== null && post !== undefined){
-                    return resolve(post);
-                }else {
-                    return reject(new Error(`unable to find post by ${id} Id`));
+                let result = await this.db.collection("users").findOneAndDelete({"_id": id });
+                if(result.ok && result.value !== null) {
+                    return resolve(result.value);
+                }else if(result.ok && result.value === null){
+                    return reject(new Error(`could'nt found any document by ${id}`));    
+                }
+                else{
+                    return reject(new Error(`unable to delete document ${id}`));
                 }
             } catch (error) {
                 return reject(error);
+            }
+        });
+    }
+
+    //////////// *************** END USER'S CRUD FUNCTIONS **************** //////////////////
+    //////////// *************** START POST'S  CRUD FUNCTIONS **************** //////////////////
+    findOne({id}) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let post = await this.db.collection("posts").findOne({ _id : id });
+                if(post !== null && post !== undefined) {
+                    return resolve(post);
+                }else {
+                    return reject(new Error(`unable to find post by id ${id.toString()}`));
+                }
+            } catch (error) {
+                return reject(new Error(error));
             }
         });
     }
@@ -224,6 +294,8 @@ class Db {
     createPost({item}) {
         return new Promise(async (resolve,reject) => { 
          try { 
+            let metaValue ={ vote : 0 };
+            Object.defineProperty(item,"meta", {configurable: true, writable: true,enumerable: true ,value:  metaValue});
             let result = await this.db.collection("posts").insertOne(item);
             if(result.acknowledged === true) {
                 Object.defineProperty(item, "_id",{configurable: true, enumerable: true, value: result.insertedId, writable: true});
@@ -240,12 +312,18 @@ class Db {
     updatePost({item, id}) {
         return new Promise(async (resolve,reject) => { 
             try { 
-                delete item._id;
-                let result = await this.db.collection("posts").findOneAndReplace({_id: id},item);
-                if(result.ok === true) {
-                    resolve(result.value);
-                }else {
-                    return reject(new Error("unable to update post!"));
+                const options = {
+                    returnDocument: "after"
+                    // returnNewDocument: true
+                  };
+                let result = await this.db.collection("posts").findOneAndReplace({"_id":id},item,options);
+                if(result.ok && result.value !== null) {
+                    return resolve(result.value);
+                }else if(result.ok && result.value === null){
+                    return reject(new Error(`could'nt found any document by ${id}`));    
+                }
+                else{
+                    return reject(new Error(`unable to update document ${id}`));
                 }
             } 
             catch (error) { 
@@ -257,10 +335,13 @@ class Db {
         return new Promise(async (resolve,reject) => { 
          try { 
             let result = await this.db.collection("posts").findOneAndDelete({ _id: id});
-            if(result.ok === true) {
+            if(result.ok && result.value !== null) {
                 return resolve(result.value);
-            }else {
-                return reject(new Error("unable to delete from database!"));
+            }else if(result.ok && result.value === null){
+                return reject(new Error(`could'nt found any document by ${id}`));    
+            }
+            else{
+                return reject(new Error(`unable to delete document ${id}`));
             }
          } 
          catch (error) { 
@@ -268,6 +349,7 @@ class Db {
          } 
         });
     }
+    //////////// *************** END POST'S  CRUD FUNCTIONS **************** //////////////////
 
 }
 module.exports = Object.assign({}, {Db});
