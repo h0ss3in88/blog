@@ -7,6 +7,7 @@ const compression = require("compression");
 const responseTime = require("response-time");
 const errHandler = require("errorhandler");
 const httpStatus = require("http-status");
+const cors = require("cors");
 const {setUpApi} = require("./api");
 const {initPassport} = require("./helpers");
 
@@ -15,6 +16,10 @@ const createApp = ({dataAccess}) => {
         try {
             require("dotenv").config();
             let app = express();
+            app.use(cors({
+                origin: "http://localhost:3000",
+                optionsSuccessStatus: 200
+            }));
             app.use(logger('dev'));
             app.use(express.json());
             app.use(cookieParser());
