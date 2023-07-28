@@ -25,8 +25,14 @@ postsApi
                 let post = await req.db.posts.findOne({id});
                 return res.status(httpStatus.OK).json({post});
             }else {
-                let posts = await req.db.posts.findAll();
-                return res.status(httpStatus.OK).json({posts});
+                if(req.query.page) {
+                    const page = parseInt(req.query.page, 10);
+                    let posts = await req.db.posts.findPostsByPage({page});
+                    return res.status(httpStatus.OK).json({posts});
+                }else {
+                    let posts = await req.db.posts.findAll();
+                    return res.status(httpStatus.OK).json({posts});                
+                }
             }     
         } catch (error) {
             return next(error);   
