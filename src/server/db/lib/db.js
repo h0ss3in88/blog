@@ -291,6 +291,18 @@ class Db {
             } 
         });
     }
+    findPostsByPage({page}) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const perPage = 10;
+                let posts = await this.db.collection("posts").find({},{ sort : {"release_date": 1}}).skip(page > 0 ? ( ( page- 1 ) * perPage ) : 0).limit(perPage).toArray();
+                return resolve(posts);
+
+            } catch (error) {
+                return reject(error);
+            }
+        });
+    }
     createPost({item}) {
         return new Promise(async (resolve,reject) => { 
          try { 
