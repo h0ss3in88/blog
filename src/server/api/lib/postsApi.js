@@ -16,6 +16,14 @@ postsApi.param("id", (req,res,next,id) => {
         return next();
     }
 });
+postsApi.get("/posts/count", async (req,res,next) => {
+    try {
+        const count = await req.db.posts.postsCount();
+        return res.status(httpStatus.OK).json({count});
+    }catch(error) {
+        return next(error);
+    }
+});
 postsApi
     .route("/posts/:id?")
     .get(async (req,res,next) => {

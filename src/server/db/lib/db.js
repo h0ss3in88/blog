@@ -361,6 +361,16 @@ class Db {
          } 
         });
     }
+    postsCount() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let count = await this.db.collection("posts").countDocuments();
+                return resolve(count);
+            }catch(error) {
+                return reject(error);
+            }
+        });
+    }
     //////////// *************** END POST'S  CRUD FUNCTIONS **************** //////////////////
 
 }
